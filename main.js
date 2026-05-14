@@ -1,4 +1,5 @@
 const API_URL = '/api/products';
+const SALES_URL = '/api/sales';
 let inventory = [];
 let cart = [];
 
@@ -13,11 +14,34 @@ async function refreshData() {
     }
 }
 
-function switchView(viewName) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`${viewName}-view`).classList.add('active-view');
-    event.currentTarget.classList.add('active');
+async function checkout() {
+    if (cart.length === 0) return alert("Cart is empty!");
+    
+    const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const saleData = {
+        total_amount: totalAmount,
+        items: cart.map(item => ({ 
+            id: item.product_id, 
+            qty: item.qty, 
+            price: item.price 
+        }))
+    };
+
+    try {
+        const res = await fetch(SALES_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(saleData)
+        });
+        if (res.ok) {
+            alert("Transaction Successful!");
+            cart = [];
+            renderCart();
+            refreshData();
+        }
+    } catch (e) {
+        console.error(e);
+    }
 }
 
 function addToCart(id) {
@@ -32,86 +56,30 @@ function addToCart(id) {
 }
 
 function renderCart() {
-    const cartContainer = document.getElementById('cart-items');
-    const totalEl = document.getElementById('cart-total');
-    cartContainer.innerHTML = '';
-    let total = 0;
-    cart.forEach(item => {
-        const itemTotal = item.price * item.qty;
-        total += itemTotal;
-        const div = document.createElement('div');
-        div.className = 'cart-row';
-        div.innerHTML = `
-            <div>
-                <div class="cart-item-name">${item.name}</div>
-                <div class="cart-item-qty">Qty: ${item.qty}</div>
-            </div>
-            <div class="cart-item-price">$${itemTotal.toFixed(2)}</div>
-        `;
-        cartContainer.appendChild(div);
-    });
-    totalEl.textContent = `$${total.toFixed(2)}`;
-}
-
-function checkout() {
-    if (cart.length === 0) {
-        alert("Cart is empty!");
-        return;
-    }
-    alert(`Transaction Successful!\nTotal: ${document.getElementById('cart-total').textContent}`);
-    cart = [];
-    renderCart();
-}
-
-document.getElementById('crud-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const data = {
-        name: document.getElementById('prod-name').value,
-        price: parseFloat(document.getElementById('prod-price').value),
-        stock: parseInt(document.getElementById('prod-stock').value)
-    };
-    try {
-        await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        this.reset();
-        refreshData();
-    } catch (err) {
-        console.error(err);
-    }
-});
-
-async function deleteItem(id) {
-    if (confirm('Delete from database?')) {
-        try {
-            await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-            refreshData();
-        } catch (err) {
-            console.error(err);
-        }
-    }
+    const container = document.getElementById('cart-items');
+    container.innerHTML = cart.map(item => `
+        <div class="cart-row">
+            <div><b>${item.name}</b><br>Qty: ${item.qty}</div>
+            <div>$${(item.price * item.qty).toFixed(2)}</div>
+        </div>
+    `).join('');
+    document.getElementById('cart-total').textContent = `$${cart.reduce((s, i) => s + (i.price * i.qty), 0).toFixed(2)}`;
 }
 
 function renderInventoryTable() {
-    const tbody = document.getElementById('inventory-table');
-    tbody.innerHTML = inventory.map(item => `
+    document.getElementById('inventory-table').innerHTML = inventory.map(item => `
         <tr>
             <td>${item.product_id}</td>
             <td>${item.name}</td>
             <td>$${parseFloat(item.price).toFixed(2)}</td>
             <td>${item.stock}</td>
-            <td>
-                <button class="act-btn del" onclick="deleteItem(${item.product_id})">Delete</button>
-            </td>
+            <td><button class="act-btn del" onclick="deleteItem(${item.product_id})">Delete</button></td>
         </tr>
     `).join('');
 }
 
 function renderTerminal() {
-    const grid = document.getElementById('product-grid');
-    grid.innerHTML = inventory.map(item => `
+    document.getElementById('product-grid').innerHTML = inventory.map(item => `
         <div class="product-card" onclick="addToCart(${item.product_id})">
             <div class="card-name">${item.name}</div>
             <div class="card-price">$${parseFloat(item.price).toFixed(2)}</div>
@@ -119,5 +87,19 @@ function renderTerminal() {
     `).join('');
 }
 
-document.querySelector('.pay-btn').onclick = checkout;
+async function deleteItem(id) {
+    if (confirm('Delete this item?')) {
+        await fetch(`${API_URL}?id=${id}`, { method: 'DELETE' });
+        refreshData();
+    }
+}
+
+function switchView(viewName) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`${viewName}-view`).classList.add('active-view');
+    event.currentTarget.classList.add('active');
+}
+
 window.onload = refreshData;
+                
