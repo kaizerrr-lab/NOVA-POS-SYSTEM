@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern POS System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="brand">Nova POS</div>
+            <button class="nav-btn active" onclick="switchView('terminal')">Terminal</button>
+            <button class="nav-btn" onclick="switchView('inventory')">Inventory</button>
+        </nav>
+
+        <main class="main-content">
+            <div id="terminal-view" class="view active-view">
+                <div class="receipt-pane">
+                    <div class="receipt-header">
+                        <h2>Current Order</h2>
+                    </div>
+                    <div class="cart-items" id="cart-items"></div>
+                    <div class="receipt-footer">
+                        <div class="totals">
+                            <span>Total</span>
+                            <span id="cart-total">$0.00</span>
+                        </div>
+                        <button class="pay-btn" onclick="checkout()">Pay Now</button>
+                    </div>
+                </div>
+                
+                <div class="products-pane">
+                    <div class="grid-header">
+                        <h2>Select Items</h2>
+                    </div>
+                    <div class="product-grid" id="product-grid"></div>
+                </div>
+            </div>
+
+            <div id="inventory-view" class="view">
+                <div class="crud-layout">
+                    <div class="form-panel">
+                        <h2>Manage Product</h2>
+                        <form id="crud-form">
+                            <input type="hidden" id="prod-id">
+                            <div class="input-group">
+                                <label for="prod-name">Item Name</label>
+                                <input type="text" id="prod-name" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="prod-price">Price ($)</label>
+                                <input type="number" id="prod-price" step="0.01" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="prod-stock">Stock Quantity</label>
+                                <input type="number" id="prod-stock" required>
+                            </div>
+                            <button type="submit" class="submit-btn">Save Item</button>
+                        </form>
+                    </div>
+
+                    <div class="table-panel">
+                        <h2>Database Records</h2>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>
