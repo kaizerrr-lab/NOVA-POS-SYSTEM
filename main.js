@@ -16,17 +16,11 @@ async function refreshData() {
 
 async function checkout() {
     if (cart.length === 0) return alert("Cart is empty!");
-    
     const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     const saleData = {
         total_amount: totalAmount,
-        items: cart.map(item => ({ 
-            id: item.product_id, 
-            qty: item.qty, 
-            price: item.price 
-        }))
+        items: cart.map(item => ({ id: item.product_id, qty: item.qty, price: item.price }))
     };
-
     try {
         const res = await fetch(SALES_URL, {
             method: 'POST',
@@ -44,14 +38,30 @@ async function checkout() {
     }
 }
 
+document.getElementById('crud-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const data = {
+        name: document.getElementById('prod-name').value,
+        price: parseFloat(document.getElementById('prod-price').value),
+        stock: parseInt(document.getElementById('prod-stock').value)
+    };
+    try {
+        await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        this.reset();
+        refreshData();
+    } catch (err) {
+        console.error(err);
+    }
+});
+
 function addToCart(id) {
     const item = inventory.find(p => p.product_id === id);
     const cartItem = cart.find(c => c.product_id === id);
-    if (cartItem) {
-        cartItem.qty++;
-    } else {
-        cart.push({ ...item, qty: 1 });
-    }
+    if (cartItem) cartItem.qty++; else cart.push({ ...item, qty: 1 });
     renderCart();
 }
 
@@ -102,4 +112,3 @@ function switchView(viewName) {
 }
 
 window.onload = refreshData;
-                
