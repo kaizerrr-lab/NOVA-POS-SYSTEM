@@ -43,7 +43,8 @@ document.getElementById('crud-form').addEventListener('submit', async function(e
     const data = {
         name: document.getElementById('prod-name').value,
         price: parseFloat(document.getElementById('prod-price').value),
-        stock: parseInt(document.getElementById('prod-stock').value)
+        stock: parseInt(document.getElementById('prod-stock').value),
+        category_id: parseInt(document.getElementById('prod-category').value)
     };
     try {
         await fetch(API_URL, {
